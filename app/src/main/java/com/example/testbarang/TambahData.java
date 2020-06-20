@@ -34,22 +34,37 @@ public class TambahData extends AppCompatActivity {
 
         database = FirebaseDatabase.getInstance().getReference();
 
-        btSubmit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!(etKode.getText().toString().isEmpty()) &&
-                        !(etNama.getText().toString().isEmpty()) )
-                    submitBrg(new Barang(etKode.getText().toString(),
-                            etNama.getText().toString()));
-                else
-                    Toast.makeText(getApplicationContext(), "Data tidak boleh Kosong",
-                            Toast.LENGTH_LONG).show();
+        final Barang barang = (Barang) getIntent().getSerializableExtra("data");
 
-                InputMethodManager imm = (InputMethodManager)
-                        getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(etKode.getWindowToken(),0);
-            }
-        });
+        if (barang != null){
+            etKode.setText(barang.getKode());
+            etNama.setText(barang.getNama());
+            btSubmit.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    barang.setKode(etKode.getText().toString());
+                    barang.setNama(etNama.getText().toString());
+                    updateBarang(barang);
+                }
+            });
+        }else {
+            btSubmit.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (!(etKode.getText().toString().isEmpty()) &&
+                            !(etNama.getText().toString().isEmpty()))
+                        submitBrg(new Barang(etKode.getText().toString(),
+                                etNama.getText().toString()));
+                    else
+                        Toast.makeText(getApplicationContext(), "Data tidak boleh Kosong",
+                                Toast.LENGTH_LONG).show();
+
+                    InputMethodManager imm = (InputMethodManager)
+                            getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(etKode.getWindowToken(), 0);
+                }
+            });
+        }
     }
     public void submitBrg(Barang brg){
         database.child("Barang").push().setValue(brg).addOnSuccessListener(this,
@@ -65,5 +80,19 @@ public class TambahData extends AppCompatActivity {
     }
     public static Intent getActIntent(Activity activity){
         return new Intent(activity, TambahData.class);
+    }
+
+    private void updateBarang(Barang brg) {
+        database.child("Barang")
+                .child(brg.getKode())
+                .setValue(brg)
+                .addOnSuccessListener(this, new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Toast.makeText(getApplicationContext(), "Data berhasil di Update",
+                                Toast.LENGTH_LONG).show();
+                        finish();
+                    }
+                });
     }
 }
